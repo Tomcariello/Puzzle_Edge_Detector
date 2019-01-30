@@ -34,7 +34,8 @@
 # images
 data/*
 
-# Debug folders
+# Debug & VS  folders
 /x64
-/Edge_Detector/Debug
+/.vs
 /Edge_Detector/x64
+/Edge_Detector/.vs
