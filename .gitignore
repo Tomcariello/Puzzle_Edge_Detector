@@ -35,7 +35,7 @@
 data/*
 
 # Debug & VS folders
-x64
-.vs
-Edge_Detector/x64
-Edge_Detector/.vs
+x64/
+.vs/
+Edge_Detector/x64/
+Edge_Detector/.vs/
