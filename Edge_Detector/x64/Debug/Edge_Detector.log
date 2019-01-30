@@ -1,3 +1,4 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(391,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Hello_World_OpenCV.vcxproj, Puzzle_Edge_Detector.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  Edge_Detector.cpp
+﻿  Edge_Detector.cpp
+  stdafx.cpp
+  Generating Code...
   Edge_Detector.vcxproj -> C:\Git_repositories\Edge_Detector\x64\Debug\Edge_Detector.exe
