@@ -2,10 +2,9 @@
 
 #pragma once
 
-//#include <stdio.h>
-//#include <tchar.h>
-# include <iostream>
 #include <string>
+#include <iostream>
+#include <filesystem>
 
 // Include OpenCV Headers
 #include "opencv2/imgcodecs.hpp"
@@ -14,60 +13,56 @@
 
 using namespace cv;
 using namespace std;
+namespace fs = std::filesystem;
 
 // Declare all functions
 void checkForPieces();
 void getPiece();
 void positionPiece();
-void takePicture();
-void getImage();
+void takePicture(string curImage);
 void detectEdges(std::string filenameUnused);
 void stopProcessing();
 
-int loopCount = 0;
+// Temporary variable to count the number of loops. Will be replaced when proper file reading is implemented.
+// int loopCount = 0;
+
+// Declare the path to the image directory
+const std::string path = "../data";
 
 
 // Check to see if there are any additional pieces    
 void checkForPieces() {
-		
-	std::cout << "Running checkForPieces...";
+	   
+	// Iterate through the directory images. Process each image found.
+	for (const auto & allFiles : fs::directory_iterator(path))
+	{
+		// Convert the current filename to a string
+		const std::string fullPath = allFiles.path().string();
 
-	if (loopCount == 0) {
-		std::cout << "Piece found!\n";
-		loopCount++;
-		getPiece();
+		// Call takePicture with the fullPath string
+		takePicture(fullPath);
 	}
-	else {
-		std::cout << "No pieces left.\n";
-		stopProcessing();
-	}
-	
+
+	stopProcessing();
 }
 
 // Select a piece from the hopper
-void getPiece() {
-	positionPiece();
-};
-
-// Move piece into position beneath the camera
-void positionPiece() {
-	takePicture();
-}
+//void getPiece() {
+//	positionPiece();
+//};
+//
+//// Move piece into position beneath the camera
+//void positionPiece() {
+//	takePicture();
+//}
 
 // Take picture of puzzle piece
-void takePicture() {
-	std::string image = "new_image";
-	getImage();
-}
-
-// check folder for image namestring 
-void getImage() {
-	std::string filename = "filename";
-	detectEdges(filename);
+void takePicture(string curImage) {
+	detectEdges(curImage);
 }
 
 // Run image processing
-void detectEdges(std::string filenameUnused) {
+void detectEdges(std::string curImage) {
 
 	// Declare the output variables. "Mat" is a OpenCV class which contains image data
 	Mat blurredImage, cannyOutput, cdst, cdstP;
@@ -75,8 +70,9 @@ void detectEdges(std::string filenameUnused) {
 	// load the image based on the main function argument
 	// To edit: Project --> Properties --> Debugging --> Command Arguments
 
-	// This is a static image
-	const char* filename = "../data/IMG_3512.JPG";
+	// This is an image path
+	//string filename = "../data/IMG_3492.JPG";
+	string filename = curImage; // This string appears to have quotes
 
 	// Load the image into an openCV container ("Mat")
 	Mat imageCV = imread(filename, IMREAD_GRAYSCALE);
@@ -87,23 +83,19 @@ void detectEdges(std::string filenameUnused) {
 		printf(" Program Arguments: [image_name -- default %s] \n", "default_file");
 		//return -1;
 	}
-	// Loading Complete
 
 	// Gaussian Blur the image
 	GaussianBlur(imageCV, blurredImage, Size(9, 9), 0, 0);
 
-	imshow("Blurred", blurredImage);
-
 	// Compute the mean with the computed mask
 	Scalar computedMean = mean(imageCV);
 
+	// Set threshold values based on the Mean
 	int upperThreshold = 1.33 * computedMean[0];
 	int lowerThreshold = .66 * computedMean[0];
 
 	// Run Canny Edge detection	
-	// Canny(inputArray, outputArray, double threshold 1, double threshold 2, aperture size)
 	Canny(blurredImage, cannyOutput, 150, 50, 3);
-
 
 	// Copy edges to the images that will display the results in BGR
 	cvtColor(cannyOutput, cdst, COLOR_GRAY2BGR);
@@ -145,9 +137,10 @@ void detectEdges(std::string filenameUnused) {
 	}
 
 	// Show results
-	imshow("Source", imageCV);
+	//imshow("Source", imageCV);
 	//imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
 	imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+	waitKey();
 
 	bool isEdgePiece = false;
 
@@ -161,7 +154,7 @@ void detectEdges(std::string filenameUnused) {
 	// Delete Image
 
 	// Start this over again
-	checkForPieces();
+	//checkForPieces();
 }
 
 // Shut this whole thing down
