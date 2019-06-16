@@ -71,7 +71,6 @@ void detectEdges(std::string curImage) {
 	// To edit: Project --> Properties --> Debugging --> Command Arguments
 
 	// This is an image path
-	//string filename = "../data/IMG_3492.JPG";
 	string filename = curImage; // This string appears to have quotes
 
 	// Load the image into an openCV container ("Mat")
@@ -84,52 +83,60 @@ void detectEdges(std::string curImage) {
 		//return -1;
 	}
 
-	// Gaussian Blur the image
-	GaussianBlur(imageCV, blurredImage, Size(9, 9), 0, 0);
+	// Resize the image to improve processing speed
+	Mat resizedimageCV;
+	resize(imageCV, resizedimageCV, Size(imageCV.cols / 2, imageCV.rows / 2));
 
-	// Compute the mean with the computed mask
-	Scalar computedMean = mean(imageCV);
+	// Gaussian Blur the image
+	GaussianBlur(resizedimageCV, blurredImage, Size(5, 5), 0, 0);
+
+	// Display the blurred image
+	//imshow("Blurred", resizedblurredImage);
+
+	// Compute the mean with the computed mask. This helps isolate on edges
+	Scalar computedMean = mean(resizedimageCV);
 
 	// Set threshold values based on the Mean
-	int upperThreshold = 1.33 * computedMean[0];
-	int lowerThreshold = .66 * computedMean[0];
+	int upperThreshold = 1.5 * computedMean[0];
+	int lowerThreshold = .5 * computedMean[0];
 
 	// Run Canny Edge detection	
-	Canny(blurredImage, cannyOutput, 150, 50, 3);
+	Canny(resizedimageCV, cannyOutput, upperThreshold, lowerThreshold, 3);
 
 	// Copy edges to the images that will display the results in BGR
 	cvtColor(cannyOutput, cdst, COLOR_GRAY2BGR);
 	cdstP = cdst.clone();
 
-	// Standard Hough Line Transform
+	// **Standard Hough Line Transform**
+
 	// Will hold the results of the detection
-	vector<Vec2f> lines;
+	//vector<Vec2f> lines;
 
 	// Run the actual detection
-	HoughLines(cannyOutput, lines, 1, CV_PI / 180, 150, 0, 0); 
+	//HoughLines(cannyOutput, lines, 1, CV_PI / 180, 100, 0, 0); 
 
-	// Draw the lines
-	for (size_t i = 0; i < lines.size(); i++)
-	{
-		float rho = lines[i][0], theta = lines[i][1];
-		Point pt1, pt2;
-		double a = cos(theta), b = sin(theta);
-		double x0 = a * rho, y0 = b * rho;
-		pt1.x = cvRound(x0 + 1000 * (-b));
-		pt1.y = cvRound(y0 + 1000 * (a));
-		pt2.x = cvRound(x0 - 1000 * (-b));
-		pt2.y = cvRound(y0 - 1000 * (a));
-		line(cdst, pt1, pt2, Scalar(0, 0, 255), 3, LINE_AA);
-	}
+	// Draw the HoughLines lines
+	//for (size_t i = 0; i < lines.size(); i++)
+	//{
+	//	float rho = lines[i][0], theta = lines[i][1];
+	//	Point pt1, pt2;
+	//	double a = cos(theta), b = sin(theta);
+	//	double x0 = a * rho, y0 = b * rho;
+	//	pt1.x = cvRound(x0 + 1000 * (-b));
+	//	pt1.y = cvRound(y0 + 1000 * (a));
+	//	pt2.x = cvRound(x0 - 1000 * (-b));
+	//	pt2.y = cvRound(y0 - 1000 * (a));
+	//	line(cdst, pt1, pt2, Scalar(0, 0, 255), 3, LINE_AA);
+	//}
 
 	// Probabilistic Hough Line Transform
 	// will hold the results of the detection
 	vector<Vec4i> linesP;
 
-	// Runs the actual detection
-	HoughLinesP(cannyOutput, linesP, 1, CV_PI / 180, 50, 50, 10); 
+	// **HoughLineP Transform**
+	HoughLinesP(cannyOutput, linesP, 1, CV_PI / 180, 50, 125, 10); 
 
-	// Draw the lines
+	// Draw each of the lines
 	for (size_t i = 0; i < linesP.size(); i++)
 	{
 		Vec4i l = linesP[i];
@@ -137,9 +144,10 @@ void detectEdges(std::string curImage) {
 	}
 
 	// Show results
-	//imshow("Source", imageCV);
-	//imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
-	imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+	Mat resizedcdstP;
+	resize(cdstP, resizedcdstP, Size(cdstP.cols / 2, cdstP.rows / 2));
+
+	imshow("Detected Lines (in red) - Probabilistic Line Transform", resizedcdstP);
 	waitKey();
 
 	bool isEdgePiece = false;
